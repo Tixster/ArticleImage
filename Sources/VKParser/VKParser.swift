@@ -13,7 +13,7 @@ public final class VKParser {
 
     private var fileManager: FileManager { .default }
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
-    private var parseDir: URL { downloadDir.appending(path: "Сливы/downloads") }
+    private var parseDir: URL { downloadDir.appending(path: "Статьи/downloads") }
 
     private let decoder: JSONDecoder = .init()
 
@@ -66,10 +66,14 @@ public final class VKParser {
 
     }
 
-    //  Парсинг со сохранением в папку
-    /// - Parameter info: Информация о статье
-    /// - Returns: Путь до папки
+
     @discardableResult
+    /// Парсинг группы статей с одинаковой тематиков
+    /// - Parameters:
+    ///   - info: Информация о типе статьи
+    ///   - start: Начальный номер статьи
+    ///   - end: Последний номер статьи
+    /// - Returns: Ссылка на папку со статьями
     public func parse(info: ArticleInfo, start: Int, end: Int) async throws -> URL {
         guard end >= start else { throw ParserError.invalidEndOption }
         guard let url = info.url else { throw ParserError.invalidURL }
@@ -79,9 +83,9 @@ public final class VKParser {
             .replacingOccurrences(of: "/@", with: "")
             .replacingOccurrences(of: Self.parseSymbol, with: "")
 
-        Self.logger.info("=====Начинаем парсинг глав \(title)=====")
+        Self.logger.info("=====Начинаем парсинг статей \(title)=====")
         defer {
-            Self.logger.info("=====Парсинг глав \(title) завершён.=====")
+            Self.logger.info("=====Парсинг статей \(title) завершён.=====")
         }
 
         let chapterRange: Range = .init(start...end)
@@ -112,10 +116,7 @@ public final class VKParser {
 
             try await group.waitForAll()
 
-
         }
-
-
 
         return titleFolderURL
 

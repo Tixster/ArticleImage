@@ -17,7 +17,7 @@ extension VKParserApp {
         var end: Int
 
         @Argument(
-            help: "Ссылка на статью. На месте номера главы должен быть знак `\(VKParser.parseSymbol)`.",
+            help: "Ссылка на статью. На месте номера статьи должен быть знак `\(VKParser.parseSymbol)`.",
             transform: { URL(string: $0) }
         )
         var url: URL?
