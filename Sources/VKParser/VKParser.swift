@@ -3,46 +3,13 @@ import Foundation
 import Zip
 import Logging
 
-public enum ParserError: LocalizedError {
-    case invalidURL
-    case badImagePage
-    case badMatchingData
-    case notAuthData
-    case notData
-}
-
 public final class VKParser {
 
     private static let logger: Logger = .init(label: String(describing: VKParser.self))
+    public static let parseSymbol: String = "keyChapterNumberArgument"
 
     private let userAgent: String = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     private let host: String = "https://vk.com/"
-
-    public struct ArticleInfo {
-        public let url: URL?
-        public let cookie: String
-
-        public init(
-            url: URL?,
-            remixnsid: String,
-            remixsid: String
-        ) {
-            self.url = url
-            let remixnsid =  "remixnsid=" + remixnsid + ";"
-            let remixsid = "remixsid=" + remixsid + ";"
-            self.cookie = remixnsid + " " + remixsid
-        }
-
-        public init(
-            url: URL?,
-            cookie: String
-        ) {
-            self.url = url
-            self.cookie = cookie
-        }
-
-
-    }
 
     private var fileManager: FileManager { .default }
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
@@ -80,8 +47,8 @@ public final class VKParser {
     /// - Parameter info: Информация о статье
     /// - Returns: Путь до папки
     @discardableResult
-    public func parse(info: ArticleInfo) async throws -> URL {
-        
+    public func parse(info: ArticleInfo, folderName: String? = nil, rootPath: String? = nil) async throws -> URL {
+
         let (fileName, imageURLs) = try await parseAndFetch(info: info)
 
         Self.logger.info("Начинаем парсинг \(fileName)")
@@ -89,9 +56,68 @@ public final class VKParser {
             Self.logger.info("Парсинг \(fileName) завершён.")
         }
 
-        let downloadImagesURL = try await downloadPages(urls: imageURLs, fileName: fileName)
+        let downloadImagesURL = try await downloadPages(
+            urls: imageURLs,
+            fileName: folderName != nil ? folderName! : fileName,
+            rootPath: rootPath
+        )
 
         return downloadImagesURL
+
+    }
+
+    //  Парсинг со сохранением в папку
+    /// - Parameter info: Информация о статье
+    /// - Returns: Путь до папки
+    @discardableResult
+    public func parse(info: ArticleInfo, start: Int, end: Int) async throws -> URL {
+        guard end >= start else { throw ParserError.invalidEndOption }
+        guard let url = info.url else { throw ParserError.invalidURL }
+
+        let title: String = url
+            .path(percentEncoded: false)
+            .replacingOccurrences(of: "/@", with: "")
+            .replacingOccurrences(of: Self.parseSymbol, with: "")
+
+        Self.logger.info("=====Начинаем парсинг глав \(title)=====")
+        defer {
+            Self.logger.info("=====Парсинг глав \(title) завершён.=====")
+        }
+
+        let chapterRange: Range = .init(start...end)
+
+        let titleFolderURL: URL = try getFolderDirectiory(fileName: title)
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+
+            for chapterNumber in chapterRange {
+
+                let urlStr = url
+                    .absoluteString
+                    .replacingOccurrences(of: Self.parseSymbol, with: "\(chapterNumber)")
+
+                let chapterNumberUrl = URL(string: urlStr)
+
+                let newInfo = info.update(url: chapterNumberUrl)
+
+                group.addTask { [weak self] in
+                    try await self?.parse(
+                        info: newInfo,
+                        folderName: "\(chapterNumber)",
+                        rootPath: title + "/"
+                    )
+                }
+
+            }
+
+            try await group.waitForAll()
+
+
+        }
+
+
+
+        return titleFolderURL
 
     }
 
@@ -107,6 +133,7 @@ private extension VKParser {
         let imageURLs: [URL] = try await fetchImages(html: html)
 
         let fileName = url.lastPathComponent.replacingOccurrences(of: "@", with: "")
+
         return (fileName, imageURLs)
     }
 
@@ -178,9 +205,13 @@ private extension VKParser {
 // MARK: - Download and Save
 private extension VKParser {
 
-    private func downloadPages(urls: [URL], fileName: String) async throws -> URL {
-        
-        let dirURL: URL = try getFolderDirectiory(fileName: fileName)
+    private func downloadPages(urls: [URL], fileName: String, rootPath: String? = nil) async throws -> URL {
+
+        let dirURL: URL = if let rootPath {
+            try getFolderDirectiory(fileName: rootPath + fileName)
+        } else {
+            try getFolderDirectiory(fileName: fileName)
+        }
 
         try await withThrowingTaskGroup(of: (url: URL, name: String).self) { group in
 
