@@ -134,6 +134,7 @@ public final class VKParser {
         }
 
         if withZip {
+            defer { try? fileManager.removeItem(at: titleFolderURL) }
             let zipPath = parseDir
                 .appending(path: titleFolderURL.lastPathComponent)
                 .appendingPathExtension("zip")
@@ -187,6 +188,7 @@ public final class VKParser {
         }
 
         if withZip {
+            defer { try? fileManager.removeItem(at: parseDir) }
             let zipPath = parseDir
                 .appending(path: Date.now.timeIntervalSince1970.description)
                 .appendingPathExtension("zip")
