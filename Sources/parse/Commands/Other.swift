@@ -15,30 +15,9 @@ extension VKParserApp {
         var urls: [URL?]
 
         func run() async throws {
+            guard let remixsid, let remixnsid else { throw ParserError.notAuthData }
             let vkPraser: VKParser = .init()
-
-            try await withThrowingTaskGroup(of: Void.self) { group in
-
-                for case let url? in urls {
-
-                    let info: ArticleInfo
-
-                    if let remixsid, let remixnsid {
-                        info = .init(url: url, remixnsid: remixnsid, remixsid: remixsid)
-                    } else {
-                        throw ParserError.notAuthData
-                    }
-
-                    group.addTask {
-                        try await vkPraser.parse(info: info)
-                    }
-
-                }
-
-                try await group.waitForAll()
-
-            }
-
+            try await vkPraser.parse(urls: urls, remixsid: remixsid, remixnsid: remixnsid)
         }
 
 

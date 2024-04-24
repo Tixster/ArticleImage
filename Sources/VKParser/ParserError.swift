@@ -6,6 +6,7 @@ public enum ParserError: LocalizedError {
     case badMatchingData
     case notAuthData
     case invalidEndOption
+    case internalError
 }
 
 extension ParserError {
@@ -22,6 +23,8 @@ extension ParserError {
             "Данные для аутентификации отсутсвуют или просрочены."
         case .invalidEndOption:
             "Некорректный номер последней ссылки."
+        case .internalError:
+            "Внутрненяя ошибка"
         }
     }
 

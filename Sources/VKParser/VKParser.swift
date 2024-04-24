@@ -13,7 +13,7 @@ public final class VKParser {
 
     private var fileManager: FileManager { .default }
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
-    private var parseDir: URL { downloadDir.appending(path: "Статьи/downloads") }
+    private var parseDir: URL { downloadDir.appending(path: "articles") }
 
     private let decoder: JSONDecoder = .init()
 
@@ -43,11 +43,18 @@ public final class VKParser {
 
     }
 
-    ///  Парсинг со сохранением в папку
-    /// - Parameter info: Информация о статье
-    /// - Returns: Путь до папки
+    /// Парсинг со сохранением в папку
+    /// - Parameters:
+    ///   - info: Информация о статье
+    ///   - folderName: Название папки
+    ///   - rootPath: Папка, в которой должна находится папка с картинками.
+    /// - Returns: Путь до папки.
     @discardableResult
-    public func parse(info: ArticleInfo, folderName: String? = nil, rootPath: String? = nil) async throws -> URL {
+    public func parse(
+        info: ArticleInfo,
+        folderName: String? = nil,
+        rootPath: String? = nil
+    ) async throws -> URL {
 
         let (fileName, imageURLs) = try await parseAndFetch(info: info)
 
@@ -67,14 +74,15 @@ public final class VKParser {
     }
 
 
-    @discardableResult
     /// Парсинг группы статей с одинаковой тематиков
     /// - Parameters:
     ///   - info: Информация о типе статьи
     ///   - start: Начальный номер статьи
     ///   - end: Последний номер статьи
+    ///   - withZip: Архивация файла
     /// - Returns: Ссылка на папку со статьями
-    public func parse(info: ArticleInfo, start: Int, end: Int) async throws -> URL {
+    @discardableResult
+    public func parse(info: ArticleInfo, start: Int, end: Int, withZip: Bool = false) async throws -> URL {
         guard end >= start else { throw ParserError.invalidEndOption }
         guard let url = info.url else { throw ParserError.invalidURL }
 
@@ -118,7 +126,73 @@ public final class VKParser {
 
         }
 
-        return titleFolderURL
+        if withZip {
+            let zipPath = parseDir
+                .appending(path: titleFolderURL.lastPathComponent)
+                .appendingPathExtension("zip")
+            try Zip.zipFiles(
+                paths: [titleFolderURL],
+                zipFilePath: zipPath,
+                password: nil,
+                compression: .BestCompression
+            ) { _ in }
+            return zipPath
+        } else {
+            return titleFolderURL
+        }
+
+
+    }
+
+    @discardableResult
+    public func parse(
+        urls: [URL?],
+        remixsid: String,
+        remixnsid: String,
+        withZip: Bool = false
+    ) async throws -> URL {
+
+        let folders: [URL] = try await withThrowingTaskGroup(of: URL.self) { group in
+
+            var files: [URL] = []
+
+            for case let url? in urls {
+
+                let info: ArticleInfo =  .init(
+                    url: url,
+                    remixnsid: remixnsid,
+                    remixsid: remixsid
+                )
+
+                group.addTask { [weak self] in
+                    guard let self else { throw ParserError.internalError }
+                    return try await self.parse(info: info)
+                }
+
+            }
+
+            for try await file in group {
+                files.append(file)
+            }
+
+            return files
+
+        }
+
+        if withZip {
+            let zipPath = parseDir
+                .appending(path: Date.now.timeIntervalSince1970.description)
+                .appendingPathExtension("zip")
+            try Zip.zipFiles(
+                paths: folders,
+                zipFilePath: zipPath,
+                password: nil,
+                compression: .BestCompression
+            ) { _ in }
+            return zipPath
+        } else {
+            return parseDir
+        }
 
     }
 
@@ -144,10 +218,15 @@ private extension VKParser {
         var request: URLRequest = .init(url: url, timeoutInterval: 120)
         request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
         request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
-
-        let data = try await URLSession.shared.data(for: request).0
-        let html: String = String(decoding: data, as: UTF8.self)
-        return (html, url)
+        do {
+            let data = try await URLSession.shared.data(for: request).0
+            let html: String = String(decoding: data, as: UTF8.self)
+            return (html, url)
+        } catch URLError.httpTooManyRedirects {
+            throw ParserError.notAuthData
+        } catch {
+             throw error
+        }
     }
 
     func fetchImages(html: String) async throws -> [URL] {
