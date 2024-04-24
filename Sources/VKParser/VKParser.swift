@@ -296,7 +296,7 @@ private extension VKParser {
             pageUrls.append(imageURL)
         }
 
-        return docURLs
+        return pageUrls
 
     }
 
