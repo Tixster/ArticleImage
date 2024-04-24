@@ -4,6 +4,7 @@ public enum ParserError: LocalizedError {
     case invalidURL
     case badImagePage
     case badMatchingData
+    case docNotLocation
     case notAuthData
     case invalidEndOption
     case internalError
@@ -16,7 +17,7 @@ extension ParserError {
         case .invalidURL:
             "Неудалось провалидировать URL."
         case .badImagePage:
-            "Изображение не обраружено."
+            "Изображение не обнаружено."
         case .badMatchingData:
             "Неудалось получить ссылки на изображения."
         case .notAuthData:
@@ -25,6 +26,8 @@ extension ParserError {
             "Некорректный номер последней ссылки."
         case .internalError:
             "Внутрненяя ошибка"
+        case .docNotLocation:
+            "Отсутсвует инофрмация об изображении"
         }
     }
 

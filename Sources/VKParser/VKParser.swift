@@ -239,7 +239,7 @@ private extension VKParser {
     func fetchImages(html: String) async throws -> [URL] {
         var pagesURL: [URL] = []
 
-        pagesURL.append(contentsOf: try parseAsDoc(html: html))
+        pagesURL.append(contentsOf: try await parseAsDoc(html: html))
         pagesURL.append(contentsOf: try parseAsImg(html: html))
 
         return pagesURL
@@ -268,9 +268,9 @@ private extension VKParser {
 
     }
 
-    func parseAsDoc(html: String) throws -> [URL] {
+    func parseAsDoc(html: String) async throws -> [URL] {
 
-        var pageURLs: [URL] = []
+        var docURLs: [URL] = []
 
         let pagesRegex: Regex = try Regex(pattern: #"img src="(?<url>/doc\d+_\d+[^"]+)"#)
         let pages: MatchSequence = pagesRegex.findAll(in: html)
@@ -283,10 +283,20 @@ private extension VKParser {
                 Self.logger.critical("Host: \(host)\nPath: \(new)")
                 throw ParserError.badImagePage
             }
-            pageURLs.append(imageURL)
+            docURLs.append(imageURL)
         }
 
-        return pageURLs
+        guard !docURLs.isEmpty else { return [] }
+
+        var pageUrls: [URL] = []
+
+        for docURL in docURLs {
+            let response = try await session.data(from: docURL).1
+            guard let imageURL = response.url else { throw ParserError.docNotLocation }
+            pageUrls.append(imageURL)
+        }
+
+        return docURLs
 
     }
 
@@ -308,7 +318,6 @@ private extension VKParser {
             for (index, url) in urls.enumerated() {
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
-
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
                     let urlFilePath = try await self.session.download(from: url).0
                     let name: String = "\(index).\(url.imageExt)"
