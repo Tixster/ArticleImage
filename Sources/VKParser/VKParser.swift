@@ -275,7 +275,10 @@ private extension VKParser {
             guard let firstMatch = page.subgroups.first, let firstMatch else { continue }
             let new = firstMatch
                 .replacingOccurrences(of: "&amp;", with: "&")
-            guard let imageURL = URL(string: host + new) else { throw ParserError.badImagePage }
+            guard let imageURL = URL(string: host + new) else {
+                Self.logger.critical("Host: \(host)\nPath: \(new)")
+                throw ParserError.badImagePage
+            }
             pageURLs.append(imageURL)
         }
 
