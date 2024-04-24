@@ -1,5 +1,8 @@
 import Regex
 import Foundation
+#if canImport(FoundationNetworking)
+    import FoundationNetworking
+#endif
 import Zip
 import Logging
 

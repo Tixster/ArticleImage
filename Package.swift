@@ -36,6 +36,12 @@ let package = Package(
                 .product(name: "Zip", package: "Zip"),
                 .product(name: "Regex", package: "Regex"),
                 .product(name: "Logging", package: "swift-log"),
+            ],
+            swiftSettings: [
+                .unsafeFlags(
+                    ["-cross-module-optimization"],
+                    .when(configuration: .release)
+                )
             ]
         ),
         .executableTarget(

@@ -101,8 +101,12 @@ extension URL {
         return urlComponents.url!
     }
 
-    func path() -> String {
-        self.path
+    func path(percentEncoded: Bool = true) -> String {
+        if percentEncoded {
+            self.path.removingPercentEncoding ?? path
+        } else {
+            path
+        }
     }
 
 }
