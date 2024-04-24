@@ -188,7 +188,6 @@ public final class VKParser {
         }
 
         if withZip {
-            defer { try? fileManager.removeItem(at: parseDir) }
             let zipPath = parseDir
                 .appending(path: Date.now.timeIntervalSince1970.description)
                 .appendingPathExtension("zip")
@@ -198,6 +197,7 @@ public final class VKParser {
                 password: nil,
                 compression: .BestCompression
             ) { _ in }
+            folders.forEach({ try? fileManager.removeItem(at: $0) })
             return zipPath
         } else {
             return parseDir
