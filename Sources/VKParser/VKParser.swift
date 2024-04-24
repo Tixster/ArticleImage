@@ -15,6 +15,10 @@ public final class VKParser {
     private let host: String = "https://vk.com/"
 
     private var fileManager: FileManager { .default }
+    private let session: URLSession = {
+        let session: URLSession = .shared
+        return session
+    }()
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
     private var parseDir: URL { downloadDir.appending(path: "articles") }
 
@@ -222,7 +226,7 @@ private extension VKParser {
         request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
         request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
         do {
-            let data = try await URLSession.shared.data(for: request).0
+            let data = try await session.data(for: request).0
             let html: String = String(decoding: data, as: UTF8.self)
             return (html, url)
         } catch URLError.httpTooManyRedirects {
@@ -302,15 +306,18 @@ private extension VKParser {
         try await withThrowingTaskGroup(of: (url: URL, name: String).self) { group in
 
             for (index, url) in urls.enumerated() {
-                group.addTask {
+                group.addTask { [weak self] in
+                    guard let self else { throw ParserError.internalError }
+
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
-                    let urlFilePath = try await URLSession.shared.download(from: url).0
+                    let urlFilePath = try await self.session.download(from: url).0
                     let name: String = "\(index).\(url.imageExt)"
                     return (urlFilePath, name)
                 }
             }
 
             for try await file in group {
+                Self.logger.info("Загружено изображение: \(file.name)")
                 let pathURL = dirURL.appending(path: file.name)
                 try fileManager.moveItem(at: file.url, to: pathURL)
             }
@@ -342,8 +349,9 @@ private extension VKParser {
             var files: [ArchiveFile] = []
 
             for (index, url) in urls.enumerated() {
-                goup.addTask {
-                    let urlFilePath = try await URLSession.shared.download(from: url).0
+                goup.addTask { [weak self] in
+                    guard let self else { throw ParserError.internalError }
+                    let urlFilePath = try await self.session.download(from: url).0
                     let file: ArchiveFile = .init(
                         filename: "\(index).\(url.imageExt)",
                         data: try NSData(contentsOf: urlFilePath),
