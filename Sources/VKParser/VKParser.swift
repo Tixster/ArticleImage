@@ -303,6 +303,7 @@ private extension VKParser {
 
             for (index, url) in urls.enumerated() {
                 group.addTask {
+                    Self.logger.debug("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
                     let urlFilePath = try await URLSession.shared.download(from: url).0
                     let name: String = "\(index).\(url.imageExt)"
                     return (urlFilePath, name)
@@ -311,7 +312,7 @@ private extension VKParser {
 
             for try await file in group {
                 let pathURL = dirURL.appending(path: file.name)
-                try fileManager.moveItem(at: file.url, to: pathURL)
+                try fileManager.copyItem(at: file.url, to: pathURL)
             }
 
         }
