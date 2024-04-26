@@ -330,6 +330,9 @@ private extension VKParser {
             for try await file in group {
                 Self.logger.info("Загружено изображение: \(file.name)")
                 let pathURL = dirURL.appending(path: file.name)
+                if fileManager.fileExists(atPath: pathURL.path(percentEncoded: false)) {
+                    try fileManager.removeItem(at: pathURL)
+                }
                 try fileManager.moveItem(at: file.url, to: pathURL)
             }
 
