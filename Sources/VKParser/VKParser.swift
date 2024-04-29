@@ -321,7 +321,9 @@ private extension VKParser {
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
-                    let data = try await self.session.data(from: url).0
+                    var request: URLRequest = .init(url: url, timeoutInterval: 300)
+                    request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
+                    let data = try await self.session.data(for: request).0
                     let name: String = "\(index).\(url.imageExt)"
                     return (data, name)
                 }
