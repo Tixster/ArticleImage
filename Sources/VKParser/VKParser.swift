@@ -320,9 +320,8 @@ private extension VKParser {
             for (index, url) in urls.enumerated() {
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
-                    let request: URLRequest = .init(url: url, timeoutInterval: 300)
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
-                    let urlFilePath = try await self.session.download(for: request).0
+                    let urlFilePath = try await self.session.download(from: url).0
                     let name: String = "\(index).\(url.imageExt)"
                     return (urlFilePath, name)
                 }
