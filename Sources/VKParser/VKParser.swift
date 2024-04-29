@@ -11,12 +11,17 @@ public final class VKParser {
     private static let logger: Logger = .init(label: String(describing: VKParser.self))
     public static let parseSymbol: String = "keyChapterNumberArgument"
 
-    private let userAgent: String = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    private static let userAgent: String = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     private let host: String = "https://vk.com"
 
     private var fileManager: FileManager { .default }
     private let session: URLSession = {
-        let session: URLSession = .shared
+//        let config = URLSessionConfiguration.default
+//        config.httpAdditionalHeaders = ["User-Agent": VKParser.userAgent]
+//        config.timeoutIntervalForRequest = 300
+//        config.httpCookieAcceptPolicy = .always
+//        config.httpShouldSetCookies = true
+        let session: URLSession = .shared // URLSession(configuration: config)
         return session
     }()
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
@@ -224,11 +229,15 @@ private extension VKParser {
     func fetchHTML(info: ArticleInfo) async throws -> (html: String, url: URL) {
         guard let url = info.url else { throw ParserError.invalidURL }
 
-        var request: URLRequest = .init(url: url, timeoutInterval: 300)
+        var request: URLRequest = .init(url: URL(string: "https://vk.com/al_articles.php?act=view")!)
+        request.httpMethod = "POST"
         request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
-        request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.addValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let bodyParameters = "url=\(url.lastPathComponent)".data(using: .utf8, allowLossyConversion: true)
+        request.httpBody = bodyParameters
         do {
-            let data = try await session.data(for: request).0
+            let (data, _) = try await session.data(for: request)
             let html: String = String(decoding: data, as: UTF8.self)
             return (html, url)
         } catch URLError.httpTooManyRedirects {
@@ -240,10 +249,9 @@ private extension VKParser {
 
     func fetchImages(html: String) async throws -> [URL] {
         var pagesURL: [URL] = []
-
         pagesURL.append(contentsOf: try await parseAsDoc(html: html))
         pagesURL.append(contentsOf: try parseAsImg(html: html))
-
+        guard !pagesURL.isEmpty else { throw ParserError.badImagePages }
         return pagesURL
     }
 
