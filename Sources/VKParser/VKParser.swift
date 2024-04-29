@@ -224,7 +224,7 @@ private extension VKParser {
     func fetchHTML(info: ArticleInfo) async throws -> (html: String, url: URL) {
         guard let url = info.url else { throw ParserError.invalidURL }
 
-        var request: URLRequest = .init(url: url, timeoutInterval: 120)
+        var request: URLRequest = .init(url: url, timeoutInterval: 300)
         request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
         request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
         do {
@@ -320,8 +320,9 @@ private extension VKParser {
             for (index, url) in urls.enumerated() {
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
+                    let request: URLRequest = .init(url: url, timeoutInterval: 300)
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
-                    let urlFilePath = try await self.session.download(from: url).0
+                    let urlFilePath = try await self.session.download(for: request)
                     let name: String = "\(index).\(url.imageExt)"
                     return (urlFilePath, name)
                 }
