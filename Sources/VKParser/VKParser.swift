@@ -71,7 +71,7 @@ public final class VKParser {
         }
 
         let downloadImagesURL = try await downloadPages(
-            urls: imageURLs,
+            urls: imageURLs, info: info,
             fileName: folderName != nil ? folderName! : fileName,
             rootPath: rootPath
         )
@@ -307,7 +307,7 @@ private extension VKParser {
 // MARK: - Download and Save
 private extension VKParser {
 
-    private func downloadPages(urls: [URL], fileName: String, rootPath: String? = nil) async throws -> URL {
+    private func downloadPages(urls: [URL], info: ArticleInfo, fileName: String, rootPath: String? = nil) async throws -> URL {
 
         let dirURL: URL = if let rootPath {
             try getFolderDirectiory(fileName: rootPath + fileName)
@@ -322,6 +322,7 @@ private extension VKParser {
                     guard let self else { throw ParserError.internalError }
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
                     var request: URLRequest = .init(url: url, timeoutInterval: 300)
+                    request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
                     request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
                     let data = try await self.session.data(for: request).0
                     let name: String = "\(index).\(url.imageExt)"
