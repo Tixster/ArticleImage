@@ -71,7 +71,7 @@ public final class VKParser {
         }
 
         let downloadImagesURL = try await downloadPages(
-            urls: imageURLs, info: info,
+            urls: imageURLs,
             fileName: folderName != nil ? folderName! : fileName,
             rootPath: rootPath
         )
@@ -307,7 +307,7 @@ private extension VKParser {
 // MARK: - Download and Save
 private extension VKParser {
 
-    private func downloadPages(urls: [URL], info: ArticleInfo, fileName: String, rootPath: String? = nil) async throws -> URL {
+    private func downloadPages(urls: [URL], fileName: String, rootPath: String? = nil) async throws -> URL {
 
         let dirURL: URL = if let rootPath {
             try getFolderDirectiory(fileName: rootPath + fileName)
@@ -315,29 +315,25 @@ private extension VKParser {
             try getFolderDirectiory(fileName: fileName)
         }
 
-        try await withThrowingTaskGroup(of: (data: Data, name: String).self) { group in
+        try await withThrowingTaskGroup(of: (url: URL, name: String).self) { group in
 
             for (index, url) in urls.enumerated() {
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
                     Self.logger.info("Скачиваю изображение \(index + 1)/\(urls.count):\n\(url)")
-                    var request: URLRequest = .init(url: url, timeoutInterval: 300)
-                    request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
-                    request.addValue(userAgent, forHTTPHeaderField: "User-Agent")
-                    let data = try await self.session.data(for: request).0
+                    let urlFilePath = try await self.session.download(from: url).0
                     let name: String = "\(index).\(url.imageExt)"
-                    return (data, name)
+                    return (urlFilePath, name)
                 }
             }
 
             for try await file in group {
                 Self.logger.info("Загружено изображение: \(file.name)")
                 let pathURL = dirURL.appending(path: file.name)
-                try file.data.write(to: pathURL, options: .atomic)
-//                if fileManager.fileExists(atPath: pathURL.path(percentEncoded: false)) {
-//                    try fileManager.removeItem(at: pathURL)
-//                }
-//                try fileManager.moveItem(at: file.url, to: pathURL)
+                if fileManager.fileExists(atPath: pathURL.path(percentEncoded: false)) {
+                    try fileManager.removeItem(at: pathURL)
+                }
+                try fileManager.moveItem(at: file.url, to: pathURL)
             }
 
         }
