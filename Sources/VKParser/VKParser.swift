@@ -160,8 +160,8 @@ public final class VKParser {
     @discardableResult
     public func parse(
         urls: [URL?],
-        remixsid: String,
-        remixnsid: String,
+        remixsid: String?,
+        remixnsid: String?,
         withZip: Bool = false
     ) async throws -> URL {
 
@@ -231,7 +231,9 @@ private extension VKParser {
 
         var request: URLRequest = .init(url: URL(string: "https://vk.com/al_articles.php?act=view")!)
         request.httpMethod = "POST"
-        request.addValue(info.cookie, forHTTPHeaderField: "Cookie")
+        if let cookie = info.cookie {
+            request.addValue(cookie, forHTTPHeaderField: "Cookie")
+        }
         request.addValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let bodyParameters = "url=\(url.lastPathComponent)".data(using: .utf8, allowLossyConversion: true)

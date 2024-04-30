@@ -25,13 +25,7 @@ extension VKParserApp {
         func run() async throws {
             let parser: VKParser = .init()
 
-            let info: ArticleInfo
-
-            if let remixsid, let remixnsid {
-                info = .init(url: url, remixnsid: remixnsid, remixsid: remixsid)
-            } else {
-                throw ParserError.notAuthData
-            }
+            let info: ArticleInfo = .init(url: url, remixnsid: remixnsid, remixsid: remixsid)
 
             try await parser.parse(info: info, start: start, end: end)
         }
