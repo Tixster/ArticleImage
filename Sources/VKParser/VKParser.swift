@@ -16,12 +16,12 @@ public final class VKParser {
 
     private var fileManager: FileManager { .default }
     private let session: URLSession = {
-//        let config = URLSessionConfiguration.default
-//        config.httpAdditionalHeaders = ["User-Agent": VKParser.userAgent]
-//        config.timeoutIntervalForRequest = 300
-//        config.httpCookieAcceptPolicy = .always
-//        config.httpShouldSetCookies = true
-        let session: URLSession = .shared // URLSession(configuration: config)
+        let config = URLSessionConfiguration.default
+        config.httpAdditionalHeaders = ["User-Agent": VKParser.userAgent]
+        config.timeoutIntervalForRequest = 300
+        config.httpCookieAcceptPolicy = .always
+        config.httpShouldSetCookies = true
+        let session: URLSession = URLSession(configuration: config)
         return session
     }()
     private var downloadDir: URL { fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0] }
@@ -234,7 +234,6 @@ private extension VKParser {
         if let cookie = info.cookie {
             request.addValue(cookie, forHTTPHeaderField: "Cookie")
         }
-        request.addValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let bodyParameters = "url=\(url.lastPathComponent)".data(using: .utf8, allowLossyConversion: true)
         request.httpBody = bodyParameters
