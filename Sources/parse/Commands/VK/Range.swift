@@ -2,10 +2,11 @@ import ArgumentParser
 import Foundation
 import VKParser
 
-
-extension VKParserApp {
+extension VKParserApp.VK {
 
     struct Range: AsyncParsableCommand {
+
+        static let vkPraser: IParser = VKParser.build()
 
         @Option(name: [.customLong("nsid")])
         var remixnsid: String?
@@ -23,11 +24,8 @@ extension VKParserApp {
         var url: URL?
 
         func run() async throws {
-            let parser: VKParser = .init()
-
             let info: ArticleInfo = .init(url: url, remixnsid: remixnsid, remixsid: remixsid)
-
-            try await parser.parse(info: info, start: start, end: end)
+            try await Self.vkPraser.parse(info: info, start: start, end: end, withZip: false)
         }
 
     }

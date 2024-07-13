@@ -2,12 +2,12 @@
 import Foundation
 import FoundationNetworking
 
-enum URLSessionAsyncError: Error {
+public enum URLSessionAsyncError: Error {
     case invalidUrlResponse
     case missingResponseData
 }
 
-extension URLSession {
+public extension URLSession {
 
     func data(
         for request: URLRequest,
@@ -81,7 +81,7 @@ extension URLSession {
 
 }
 
-extension URL {
+public extension URL {
 
     static var downloadsDirectory: URL {
         FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]

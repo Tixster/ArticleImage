@@ -1,6 +1,6 @@
 import Foundation
 
-extension URL {
+public extension URL {
 
     var imageExt: String {
         if absoluteString.contains(".jpg") {

@@ -1,31 +1,34 @@
 import Foundation
 
-typealias Pages = [Page]
+extension VKParser {
+    typealias Pages = [Page]
 
-struct Page: Codable {
-    let s, m, x, y, z, w: [Value]?
+    struct Page: Codable {
+        let s, m, x, y, z, w: [Value]?
 
-    struct Info {
-        let url: URL
-        let size: Int
+        struct Info {
+            let url: URL
+            let size: Int
+        }
+
+        var largeURL: URL? {
+            let all = [s, m, x, y, z, w]
+                .compactMap({ $0 })
+                .sorted(by: { currnet, next in
+                    let curMax = currnet.compactMap({ $0.size }).max() ?? .zero
+                    let nextMax = next.compactMap({ $0.size }).max() ?? .zero
+                    return curMax > nextMax
+                })
+                .first
+            return all?.first?.url
+
+        }
+
     }
-
-    var largeURL: URL? {
-        let all = [s, m, x, y, z, w]
-            .compactMap({ $0 })
-            .sorted(by: { currnet, next in
-                let curMax = currnet.compactMap({ $0.size }).max() ?? .zero
-                let nextMax = next.compactMap({ $0.size }).max() ?? .zero
-                return curMax > nextMax
-            })
-            .first
-        return all?.first?.url
-
-    }
-
 }
 
-extension Page {
+
+extension VKParser.Page {
 
     struct Value: Codable {
         let size: Int?

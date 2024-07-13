@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "VKParser",
+    name: "ArticleParser",
     platforms: [
         .iOS(.v15),
         .macOS(.v14)
@@ -31,11 +31,35 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "Parser",
+            dependencies: [
+                .product(name: "Zip", package: "Zip"),
+                .product(name: "Logging", package: "swift-log"),
+                .target(name: "Common")
+            ],
+            swiftSettings: [
+                .unsafeFlags(
+                    ["-cross-module-optimization"],
+                    .when(configuration: .release)
+                )
+            ]
+        ),
+        .target(
+            name: "Common",
+            swiftSettings: [
+                .unsafeFlags(
+                    ["-cross-module-optimization"],
+                    .when(configuration: .release)
+                )
+            ]
+        ),
+        .target(
             name: "VKParser",
             dependencies: [
                 .product(name: "Zip", package: "Zip"),
                 .product(name: "Regex", package: "Regex"),
-                .product(name: "Logging", package: "swift-log"),
+                .target(name: "Parser"),
+                .target(name: "Common")
             ],
             swiftSettings: [
                 .unsafeFlags(
@@ -58,7 +82,7 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "VKParserTests",
-            dependencies: ["VKParser"]),
+            name: "ParserTests",
+            dependencies: ["Parser"]),
     ]
 )
