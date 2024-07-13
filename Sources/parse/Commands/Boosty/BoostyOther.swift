@@ -12,7 +12,7 @@ extension VKParserApp.Boosty {
         var cookie: String?
 
         @Argument(help: "Ссылки на статьи", transform: { URL(string: $0) })
-        var urls: [URL?] = [URL(string: "https://boosty.to/valek_91/posts/f99bd07d-3f20-43d5-8f55-7cce1ab890e2")]
+        var urls: [URL?] = [URL(string: "https://boosty.to/valek_91/posts/794310b9-e56f-44ef-b186-b244d180ea72")]
 
         func run() async throws {
             try await Self.parser.parse(

@@ -9,7 +9,7 @@ extension VKParserApp {
                 Other.self,
                 Tags.self
             ],
-            defaultSubcommand: Tags.self
+            defaultSubcommand: Other.self
         )
     }
 

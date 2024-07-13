@@ -28,7 +28,7 @@ public struct ArticleInfo {
     ) {
         self.url = url
         self.cookie = cookie
-        if let cookie, let jsonData = cookie.data(using: .utf8) {
+        if let cookie = cookie?.removingPercentEncoding, let jsonData = cookie.data(using: .utf8) {
             let decoder = JSONDecoder()
             tokenInfo = try? decoder.decode(TokenInfo.self, from: jsonData)
         } else {
