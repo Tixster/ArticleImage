@@ -7,13 +7,22 @@ import Zip
 @_exported import Common
 
 open class Parser: IParser {
+    
+    public static func build() -> any IParser {
+        Self()
+    }
+
+    open var name: String { "" }
 
     public static var logger: Logger { .init(label: String(describing: Self.self)) }
 
     private static let userAgent: String = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     public let session: URLSession = {
         let config = URLSessionConfiguration.default
-        config.httpAdditionalHeaders = ["User-Agent": Parser.userAgent]
+        config.httpAdditionalHeaders = [
+            "User-Agent": Parser.userAgent,
+            "Content-Type": "application/json"
+        ]
         config.timeoutIntervalForRequest = 300
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
@@ -22,12 +31,15 @@ open class Parser: IParser {
     }()
     public let fileManager: FileManager = .default
     public let downloadDir: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
-    public var parseDir: URL { downloadDir.appending(path: "articles") }
+    open var parseDir: URL { downloadDir.appending(path: "articles").appending(path: name) }
     public let decoder: JSONDecoder = .init()
 
-    public init() {}
+    required public init() {}
 
-    open func parseAndFetch(info: ArticleInfo) async throws -> (fileName: String, images: [URL]) {
+    open func parseAndFetch(
+        info: ArticleInfo,
+        parametres: [ParserParametersKey: Any]?
+    ) async throws -> (fileName: String, images: [URL]) {
         fatalError("parseAndFetch not implemented")
     }
 
@@ -39,39 +51,48 @@ open class Parser: IParser {
     ///   - withZip: Архивация файла
     /// - Returns: Ссылка на папку со статьями
     @discardableResult
-    open func parse(info: ArticleInfo, start: Int, end: Int, withZip: Bool = false) async throws -> URL {
-        fatalError("parse(info:, start:, end:, withZip:) not implemented")
+    open func parse(
+        info: ArticleInfo,
+        start: Int,
+        end: Int,
+        withZip: Bool = false
+    ) async throws -> URL {
+        throw ParserError.notSupported
+    }
+
+    @discardableResult
+    open func parse(
+        info: ArticleInfo,
+        withZip: Bool,
+        parametres: [ParserParametersKey: Any]? = nil
+    ) async throws -> URL {
+
+        let (fileName, imageURLs) = try await parseAndFetch(info: info, parametres: parametres)
+
+        if withZip {
+            let files = try await downloadPagesAndArchive(urls: imageURLs)
+            let zipPath = downloadDir.appending(path: fileName).appendingPathExtension("zip")
+
+            try Zip.zipData(
+                archiveFiles: files,
+                zipFilePath: zipPath,
+                password: nil,
+                compression: .BestCompression
+            ) { progress in
+
+            }
+
+            return zipPath
+        } else {
+            let folderURL = try await downloadPages(urls: imageURLs, fileName: fileName)
+            return folderURL
+        }
+
     }
 
 }
 
 extension Parser {
-
-    ///  Парсинг с архивацией
-    /// - Parameter info: Информация о статье
-    /// - Returns: Путь до файла с архивом
-    @discardableResult
-    public func parseAndArchive(
-        info: ArticleInfo
-    ) async throws -> URL {
-
-        let (fileName, imageURLs) = try await parseAndFetch(info: info)
-
-        let files = try await downloadPagesAndArchive(urls: imageURLs)
-        let zipPath = downloadDir.appending(path: fileName).appendingPathExtension("zip")
-
-        try Zip.zipData(
-            archiveFiles: files,
-            zipFilePath: zipPath,
-            password: nil,
-            compression: .BestCompression
-        ) { progress in
-
-        }
-
-        return zipPath
-
-    }
 
     // Парсинг со сохранением в папку
     /// - Parameters:
@@ -83,10 +104,11 @@ extension Parser {
     public func parse(
         info: ArticleInfo,
         folderName: String? = nil,
-        rootPath: String? = nil
+        rootPath: String? = nil,
+        parametres: [ParserParametersKey: Any]?
     ) async throws -> URL {
 
-        let (fileName, imageURLs) = try await parseAndFetch(info: info)
+        let (fileName, imageURLs) = try await parseAndFetch(info: info, parametres: parametres)
 
         Self.logger.info("Начинаем парсинг \(fileName)")
         defer {
@@ -107,7 +129,8 @@ extension Parser {
     public func parse(
         urls: [URL?],
         info: ArticleInfo,
-        withZip: Bool = false
+        withZip: Bool = false,
+        parametres: [ParserParametersKey: Any]?
     ) async throws -> URL {
 
         let folders: [URL] = try await withThrowingTaskGroup(of: URL.self) { group in
@@ -120,7 +143,7 @@ extension Parser {
 
                 group.addTask { [weak self] in
                     guard let self else { throw ParserError.internalError }
-                    return try await self.parse(info: newInfo)
+                    return try await self.parse(info: newInfo, parametres: parametres)
                 }
 
             }
@@ -158,6 +181,7 @@ extension Parser {
 // MARK: - Download and Save
 public extension Parser {
 
+    @discardableResult
     func downloadPages(urls: [URL], fileName: String, rootPath: String? = nil) async throws -> URL {
 
         let dirURL: URL = if let rootPath {

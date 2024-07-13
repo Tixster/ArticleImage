@@ -4,6 +4,7 @@ public struct ArticleInfo {
 
     public let url: URL?
     public let cookie: String?
+    public let tokenInfo: TokenInfo?
 
     public init(
         url: URL?,
@@ -18,7 +19,7 @@ public struct ArticleInfo {
         } else {
             cookie = nil
         }
-
+        tokenInfo = nil
     }
 
     public init(
@@ -27,6 +28,21 @@ public struct ArticleInfo {
     ) {
         self.url = url
         self.cookie = cookie
+        if let cookie, let jsonData = cookie.data(using: .utf8) {
+            let decoder = JSONDecoder()
+            tokenInfo = try? decoder.decode(TokenInfo.self, from: jsonData)
+        } else {
+            tokenInfo = nil
+        }
+    }
+
+    public init(
+        url: URL?,
+        tokenInfo: TokenInfo?
+    ) {
+        self.url = url
+        self.tokenInfo = tokenInfo
+        self.cookie = nil
     }
 
     public func update(url: URL?) -> Self {

@@ -9,6 +9,7 @@ public enum ParserError: LocalizedError {
     case notAuthData
     case invalidEndOption
     case internalError
+    case notSupported
 }
 
 extension ParserError {
@@ -31,6 +32,8 @@ extension ParserError {
             "Внутрненяя ошибка"
         case .docNotLocation:
             "Отсутсвует инофрмация об изображении"
+        case .notSupported:
+            "Не поддерживается."
         }
     }
 

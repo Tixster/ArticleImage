@@ -1,15 +1,16 @@
 import ArgumentParser
 import Foundation
 
+
 extension VKParserApp {
-    
-    struct VK: AsyncParsableCommand {
+    struct Boosty: AsyncParsableCommand {
         static var configuration: CommandConfiguration = .init(
             subcommands: [
-                Range.self,
-                Other.self
+                Other.self,
+                Tags.self
             ],
-            defaultSubcommand: Other.self
+            defaultSubcommand: Tags.self
         )
     }
+
 }

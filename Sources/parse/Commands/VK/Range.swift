@@ -6,7 +6,7 @@ extension VKParserApp.VK {
 
     struct Range: AsyncParsableCommand {
 
-        static let vkPraser: IParser = VKParser.build()
+        static let vkPraser: any IParser = VKParser.build()
 
         @Option(name: [.customLong("nsid")])
         var remixnsid: String?

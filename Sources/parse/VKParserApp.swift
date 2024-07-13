@@ -8,8 +8,9 @@ struct VKParserApp: AsyncParsableCommand {
     static var configuration: CommandConfiguration = .init(
         subcommands: [
             VK.self,
+            Boosty.self
         ],
-        defaultSubcommand: VK.self
+        defaultSubcommand: Boosty.self
     )
 
 }

@@ -1,30 +1,36 @@
 import Foundation
 
 public protocol IParser: AnyObject {
+    static func build() -> IParser
+    init()
     ///  Парсинг с архивацией
     /// - Parameter info: Информация о статье
     /// - Returns: Путь до файла с архивом
     @discardableResult
-    func parseAndArchive(
-        info: ArticleInfo
+    func parse(
+        info: ArticleInfo,
+        withZip: Bool,
+        parametres: [ParserParametersKey: Any]?
     ) async throws -> URL
     // Парсинг со сохранением в папку
     /// - Parameters:
     ///   - info: Информация о статье
-    ///   - folderName: Название папки
+    ///   - folderName: Название папки с картинками
     ///   - rootPath: Папка, в которой должна находится папка с картинками.
     /// - Returns: Путь до папки.
     @discardableResult
     func parse(
         info: ArticleInfo,
         folderName: String?,
-        rootPath: String?
+        rootPath: String?,
+        parametres: [ParserParametersKey: Any]?
     ) async throws -> URL
     @discardableResult
     func parse(
         urls: [URL?],
         info: ArticleInfo,
-        withZip: Bool
+        withZip: Bool,
+        parametres: [ParserParametersKey: Any]?
     ) async throws -> URL
     /// Парсинг группы статей с одинаковой тематиков
     /// - Parameters:

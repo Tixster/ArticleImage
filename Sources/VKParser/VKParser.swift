@@ -1,22 +1,17 @@
 import Regex
 import Foundation
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 import Zip
 import Parser
 @_exported import Common
 
 public final class VKParser: Parser {
 
-    public static func build() -> IParser {
-        VKParser()
-    }
+    internal required init() { super.init() }
+
+    public override var name: String { "vk" }
 
     public static let parseSymbol: String = "keyChapterNumberArgument"
     private let host: String = "https://vk.com"
-
-    private override init() { super.init() }
 
     /// Парсинг группы статей с одинаковой тематиков
     /// - Parameters:
@@ -30,19 +25,19 @@ public final class VKParser: Parser {
         guard end >= start else { throw ParserError.invalidEndOption }
         guard let url = info.url else { throw ParserError.invalidURL }
 
-        let title: String = url
+        let articleTitle: String = url
             .path(percentEncoded: false)
             .replacingOccurrences(of: "/@", with: "")
             .replacingOccurrences(of: Self.parseSymbol, with: "")
 
-        Self.logger.info("=====Начинаем парсинг статей \(title)=====")
+        Self.logger.info("=====Начинаем парсинг статей \(articleTitle)=====")
         defer {
-            Self.logger.info("=====Парсинг статей \(title) завершён.=====")
+            Self.logger.info("=====Парсинг статей \(articleTitle) завершён.=====")
         }
 
         let chapterRange: Range = .init(start...end)
 
-        let titleFolderURL: URL = try getFolderDirectiory(fileName: title)
+        let titleFolderURL: URL = try getFolderDirectiory(fileName: articleTitle)
 
         try await withThrowingTaskGroup(of: Void.self) { group in
 
@@ -60,7 +55,8 @@ public final class VKParser: Parser {
                     try await self?.parse(
                         info: newInfo,
                         folderName: "\(chapterNumber)",
-                        rootPath: title + "/"
+                        rootPath: articleTitle + "/",
+                        parametres: nil
                     )
                 }
 
@@ -88,7 +84,10 @@ public final class VKParser: Parser {
 
     }
 
-    public override func parseAndFetch(info: ArticleInfo) async throws -> (fileName: String, images: [URL]) {
+    public override func parseAndFetch(
+        info: ArticleInfo,
+        parametres: [ParserParametersKey: Any]?
+    ) async throws -> (fileName: String, images: [URL]) {
         let (html, url) = try await fetchHTML(info: info)
 
         let imageURLs: [URL] = try await fetchImages(html: html)

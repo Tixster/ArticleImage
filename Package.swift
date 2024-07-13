@@ -13,6 +13,9 @@ let package = Package(
         .library(
             name: "VKParser",
             targets: ["VKParser"]),
+        .library(
+            name: "BoostyParser",
+            targets: ["BoostyParser"]),
     ],
     dependencies: [
         .package(
@@ -68,6 +71,20 @@ let package = Package(
                 )
             ]
         ),
+        .target(
+            name: "BoostyParser",
+            dependencies: [
+                .product(name: "Zip", package: "Zip"),
+                .target(name: "Parser"),
+                .target(name: "Common")
+            ],
+            swiftSettings: [
+                .unsafeFlags(
+                    ["-cross-module-optimization"],
+                    .when(configuration: .release)
+                )
+            ]
+        ),
         .executableTarget(
             name: "parse",
             dependencies: [
@@ -76,6 +93,7 @@ let package = Package(
                     package: "swift-argument-parser"
                 ),
                 .target(name: "VKParser"),
+                .target(name: "BoostyParser")
             ],
             resources: [
                 .process("Resources")

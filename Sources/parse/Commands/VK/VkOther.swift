@@ -24,7 +24,8 @@ extension VKParserApp.VK {
                     remixnsid: remixnsid,
                     remixsid: remixsid
                 ),
-                withZip: false
+                withZip: false,
+                parametres: nil
             )
         }
 
