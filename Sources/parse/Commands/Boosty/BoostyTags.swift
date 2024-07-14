@@ -8,7 +8,7 @@ extension VKParserApp.Boosty {
 
         static let parser: IParser = BoostyParser.build()
 
-        @Option(name: [.customLong("cookie")])
+        @Option(name: [.short])
         var cookie: String?
 
         @Argument(help: "Ссылка с тегами")
@@ -17,7 +17,7 @@ extension VKParserApp.Boosty {
         func run() async throws {
             try await Self.parser.parse(
                 info: .init(url: .init(string: url), cookie: cookie),
-                withZip: true,
+                withZip: false,
                 parametres: nil
             )
         }

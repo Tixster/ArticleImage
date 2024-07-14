@@ -117,7 +117,7 @@ extension Parser {
 
         let downloadImagesURL = try await downloadPages(
             urls: imageURLs,
-            fileName: folderName != nil ? folderName! : fileName,
+            fileName: folderName != nil ? folderName! : fileName.replacingOccurrences(of: "/", with: "-"),
             rootPath: rootPath
         )
 
