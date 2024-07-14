@@ -1,6 +1,6 @@
 import Foundation
 #if canImport(FoundationNetworking)
-    import FoundationNetworking
+@_exported import FoundationNetworking
 #endif
 import Zip
 @_exported import Logging
