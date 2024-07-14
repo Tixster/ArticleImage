@@ -49,7 +49,7 @@ public final class BoostyParser: Parser {
 
         guard !images.isEmpty else { throw ParserError.badImagePages }
 
-        return (post.title, images)
+        return (post.title.replacingOccurrences(of: " ", with: "_"), images)
     }
 
     public override func parse(
