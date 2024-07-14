@@ -17,7 +17,7 @@ extension VKParserApp.Boosty {
         func run() async throws {
             try await Self.parser.parse(
                 urls: urls,
-                info: .init(url: nil, cookie: "%7B%22accessToken%22%3A%2217b2b7c665732ca2eaf3ba1cd667331b5bcfa9c3b8e7190b87c731c927c5d4b3%22%2C%22refreshToken%22%3A%2293367056a9e94bae559e99ffd258f453bdfc2596e300c1b9c9a84e1d760e7ba1%22%2C%22expiresAt%22%3A%221721067471106%22%2C%22isEmptyUser%22%3A%220%22%2C%22redirectAppId%22%3A%22web%22%7D"),
+                info: .init(url: nil, cookie: cookie),
                 withZip: false,
                 parametres: nil
             )
