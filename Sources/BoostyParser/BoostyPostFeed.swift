@@ -9,7 +9,8 @@ struct BoostyPostFeed: Decodable {
 
 // MARK: - BoostyPostFeedDatum
 struct BoostyPost: Decodable {
-    let isPublished, hasAccess: Bool
+    let isPublished: Bool
+    let hasAccess: Bool
     let id: String
     let isCommentsDenied: Bool
     let price: Int
