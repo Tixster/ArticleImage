@@ -7,7 +7,7 @@ let package = Package(
     name: "ArticleParser",
     platforms: [
         .iOS(.v15),
-        .macOS(.v14)
+        .macOS(.v13)
     ],
     products: [
         .library(
