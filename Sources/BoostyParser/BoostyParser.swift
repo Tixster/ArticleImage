@@ -8,18 +8,16 @@ extension ParserParametersKey {
     static let tags: Self = .init("Boosty_Tags")
 }
 
-public final class BoostyParser: Parser {
+public final class BoostyParser: Parser, @unchecked Sendable {
 
     private let api: URL = .init(string: "https://api.boosty.to/v1/blog")!
 
     public override var name: String { "boosty" }
 
     public override func parseAndFetch(
-        info: ArticleInfo,
-        parametres: [ParserParametersKey: Any]?
+        info: ArticleInfo
     ) async throws -> (fileName: String, images: [URL]
     ) {
-
         guard let url = info.url else {
             throw ParserError.invalidURL
         }
@@ -45,7 +43,12 @@ public final class BoostyParser: Parser {
 
         let images = post.data
             .filter({ $0.type == .image })
-            .compactMap({ $0.url })
+            .compactMap({
+                if let urlStr = $0.url {
+                    return URL(string: urlStr)
+                }
+                return nil
+            })
 
         guard !images.isEmpty else { throw ParserError.badImagePages }
 
@@ -54,8 +57,7 @@ public final class BoostyParser: Parser {
 
     public override func parse(
         info: ArticleInfo,
-        withZip: Bool,
-        parametres: [ParserParametersKey : Any]? = nil
+        withZip: Bool
     ) async throws -> URL {
         guard let url = info.url else {
             throw ParserError.invalidURL
@@ -69,13 +71,16 @@ public final class BoostyParser: Parser {
 
     }
 
-    
-
 }
 
 private extension BoostyParser {
 
-    func fetchAllPosts(by tags: [String], userURL: String, info: ArticleInfo, withZip: Bool) async throws -> URL {
+    func fetchAllPosts(
+        by tags: [String],
+        userURL: String,
+        info: ArticleInfo,
+        withZip: Bool
+    ) async throws -> URL {
         let url = api
             .appending(path: userURL)
             .appending(path: "post/")
@@ -112,7 +117,12 @@ private extension BoostyParser {
 
                 let images = post.data
                     .filter({ $0.type == .image })
-                    .compactMap({ $0.url })
+                    .compactMap({
+                        if let urlStr = $0.url {
+                            return URL(string: urlStr)
+                        }
+                        return nil
+                    })
 
                 guard !images.isEmpty else { continue }
 

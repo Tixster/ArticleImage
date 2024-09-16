@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ArticleInfo {
+public struct ArticleInfo: Sendable {
 
     public let url: URL?
     public let cookie: String?

@@ -1,6 +1,6 @@
 import Foundation
 
-@propertyWrapper public struct Optionally<Wrapped: Decodable> {
+@propertyWrapper public struct Optionally<Wrapped: Decodable & Sendable>: Sendable {
     public let wrappedValue: Wrapped?
 
     public init(wrappedValue: Wrapped?) {

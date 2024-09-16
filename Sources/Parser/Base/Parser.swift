@@ -2,19 +2,19 @@ import Foundation
 #if canImport(FoundationNetworking)
 @_exported import FoundationNetworking
 #endif
-import Zip
+@preconcurrency import Zip
 @_exported import Logging
 @_exported import Common
 
-open class Parser: IParser {
-    
-    public static func build() -> any IParser {
+open class Parser: IParser, @unchecked Sendable {
+
+    public static func build() -> (any IParser & Sendable) {
         Self()
     }
 
     open var name: String { "" }
 
-    public static var logger: Logger { .init(label: String(describing: Self.self)) }
+    nonisolated public static var logger: Logger { .init(label: String(describing: Self.self)) }
 
     private static let userAgent: String = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     public let session: URLSession = {
@@ -29,7 +29,7 @@ open class Parser: IParser {
         let session: URLSession = URLSession(configuration: config)
         return session
     }()
-    public let fileManager: FileManager = .default
+    nonisolated(unsafe) public let fileManager: FileManager = .default
     public let downloadDir: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
     open var parseDir: URL { downloadDir.appending(path: "articles").appending(path: name) }
     public let decoder: JSONDecoder = .init()
@@ -37,8 +37,7 @@ open class Parser: IParser {
     required public init() {}
 
     open func parseAndFetch(
-        info: ArticleInfo,
-        parametres: [ParserParametersKey: Any]?
+        info: ArticleInfo
     ) async throws -> (fileName: String, images: [URL]) {
         fatalError("parseAndFetch not implemented")
     }
@@ -63,11 +62,10 @@ open class Parser: IParser {
     @discardableResult
     open func parse(
         info: ArticleInfo,
-        withZip: Bool,
-        parametres: [ParserParametersKey: Any]? = nil
+        withZip: Bool
     ) async throws -> URL {
 
-        let (fileName, imageURLs) = try await parseAndFetch(info: info, parametres: parametres)
+        let (fileName, imageURLs) = try await parseAndFetch(info: info)
 
         if withZip {
             let files = try await downloadPagesAndArchive(urls: imageURLs)
@@ -104,11 +102,10 @@ extension Parser {
     public func parse(
         info: ArticleInfo,
         folderName: String? = nil,
-        rootPath: String? = nil,
-        parametres: [ParserParametersKey: Any]?
+        rootPath: String? = nil
     ) async throws -> URL {
 
-        let (fileName, imageURLs) = try await parseAndFetch(info: info, parametres: parametres)
+        let (fileName, imageURLs) = try await parseAndFetch(info: info)
 
         Self.logger.info("Начинаем парсинг \(fileName)")
         defer {
@@ -129,8 +126,7 @@ extension Parser {
     public func parse(
         urls: [URL?],
         info: ArticleInfo,
-        withZip: Bool = false,
-        parametres: [ParserParametersKey: Any]?
+        withZip: Bool = false
     ) async throws -> URL {
 
         let folders: [URL] = try await withThrowingTaskGroup(of: URL.self) { group in
@@ -139,11 +135,9 @@ extension Parser {
 
             for case let url? in urls {
 
-                let newInfo: ArticleInfo = info.update(url: url)
-
-                group.addTask { [weak self] in
-                    guard let self else { throw ParserError.internalError }
-                    return try await self.parse(info: newInfo, parametres: parametres)
+                group.addTask {
+                    let newInfo: ArticleInfo = info.update(url: url)
+                    return try await self.parse(info: newInfo)
                 }
 
             }
@@ -182,7 +176,11 @@ extension Parser {
 public extension Parser {
 
     @discardableResult
-    func downloadPages(urls: [URL], fileName: String, rootPath: String? = nil) async throws -> URL {
+    nonisolated(unsafe) func downloadPages(
+        urls: [URL],
+        fileName: String,
+        rootPath: String? = nil
+    ) async throws -> URL {
 
         let dirURL: URL = if let rootPath {
             try getFolderDirectiory(fileName: rootPath + fileName)

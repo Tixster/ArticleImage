@@ -6,7 +6,7 @@ extension VKParserApp.Boosty {
 
     struct Other: AsyncParsableCommand {
 
-        static let parser: IParser = BoostyParser.build()
+        static let parser: (IParser & Sendable) = BoostyParser.build()
 
         @Option(name: [.short])
         var cookie: String?
@@ -18,8 +18,7 @@ extension VKParserApp.Boosty {
             try await Self.parser.parse(
                 urls: urls,
                 info: .init(url: nil, cookie: cookie),
-                withZip: false,
-                parametres: nil
+                withZip: false
             )
         }
 

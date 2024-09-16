@@ -6,7 +6,7 @@ extension VKParserApp.VK {
 
     struct Other: AsyncParsableCommand {
 
-        static let parser: IParser = VKParser.build()
+        static let parser: (IParser & Sendable) = VKParser.build()
 
         @Option(name: [.customLong("nsid")])
         var remixnsid: String?
@@ -24,8 +24,7 @@ extension VKParserApp.VK {
                     remixnsid: remixnsid,
                     remixsid: remixsid
                 ),
-                withZip: false,
-                parametres: nil
+                withZip: false
             )
         }
 

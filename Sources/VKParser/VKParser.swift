@@ -4,7 +4,7 @@ import Zip
 import Parser
 @_exported import Common
 
-public final class VKParser: Parser {
+public final class VKParser: Parser, @unchecked Sendable {
 
     internal required init() { super.init() }
 
@@ -55,8 +55,7 @@ public final class VKParser: Parser {
                     try await self?.parse(
                         info: newInfo,
                         folderName: "\(chapterNumber)",
-                        rootPath: articleTitle + "/",
-                        parametres: nil
+                        rootPath: articleTitle + "/"
                     )
                 }
 
@@ -85,8 +84,7 @@ public final class VKParser: Parser {
     }
 
     public override func parseAndFetch(
-        info: ArticleInfo,
-        parametres: [ParserParametersKey: Any]?
+        info: ArticleInfo
     ) async throws -> (fileName: String, images: [URL]) {
         let (html, url) = try await fetchHTML(info: info)
 

@@ -2,13 +2,13 @@ import Foundation
 import Common
 
 // MARK: - BoostyPostFeed
-struct BoostyPostFeed: Decodable {
+struct BoostyPostFeed: Decodable, Sendable {
     let data: [BoostyPost]
     let extra: BoostyPostFeedExtra
 }
 
 // MARK: - BoostyPostFeedDatum
-struct BoostyPost: Decodable {
+struct BoostyPost: Decodable, Sendable {
     let isPublished: Bool
     let hasAccess: Bool
     let id: String
@@ -42,7 +42,7 @@ struct BoostyPost: Decodable {
 }
 
 // MARK: - CommentsDatum
-struct CommentsDatum: Decodable {
+struct CommentsDatum: Decodable, Sendable {
     let reactions: Reactions
     let createdAt: Int
     let replies: Comments
@@ -61,13 +61,13 @@ struct CommentsDatum: Decodable {
 }
 
 // MARK: - Comments
-struct Comments: Decodable {
+struct Comments: Decodable, Sendable {
     let data: [CommentsDatum]
     let extra: CommentsExtra
 }
 
 // MARK: - Author
-struct Author: Decodable {
+struct Author: Decodable, Sendable {
     let hasAvatar: Bool
     let id: Int
     let name: String
@@ -80,55 +80,55 @@ struct Author: Decodable {
 }
 
 // MARK: - PurpleDatum
-struct PurpleDatum: Decodable {
+struct PurpleDatum: Decodable, Sendable {
     let content: String
     let modificator: Modificator
     @Optionally var type: TypeEnum?
 }
 
-enum Modificator: String, Decodable {
+enum Modificator: String, Decodable, Sendable {
     case blockEnd = "BLOCK_END"
     case empty = ""
 }
 
-enum TypeEnum: String, Decodable {
+enum TypeEnum: String, Decodable, Sendable {
     case image = "image"
     case text = "text"
 }
 
 // MARK: - Post
-struct Post: Decodable {
+struct Post: Decodable, Sendable {
     let id: String
 }
 
 // MARK: - Reactions
-struct Reactions: Decodable {
+struct Reactions: Decodable, Sendable {
     let like, dislike, fire, sad: Int
     let heart, angry, laught, wonder: Int
 }
 
 // MARK: - CommentsExtra
-struct CommentsExtra: Decodable {
+struct CommentsExtra: Decodable, Sendable {
     let isFirst: Bool?
     let isLast: Bool?
 }
 
 // MARK: - ContentCounter
-struct ContentCounter: Decodable {
+struct ContentCounter: Decodable, Sendable {
     let count: Int
     @Optionally var type: TypeEnum?
     let size: Int
 }
 
 // MARK: - Count
-struct Count: Decodable {
+struct Count: Decodable, Sendable {
     let comments, likes: Int
     let reactions: Reactions
 }
 
 // MARK: - TeaserElement
-struct TeaserElement: Decodable {
-    let url: URL?
+struct TeaserElement: Decodable, Sendable {
+    let url: String?
     let size, height: Int?
     let id: String?
     @Optionally var rendition: Rendition?
@@ -138,23 +138,23 @@ struct TeaserElement: Decodable {
     let content: String?
 }
 
-enum Rendition: String, Decodable {
+enum Rendition: String, Decodable, @unchecked Sendable {
     case empty = ""
     case teaserAutoBackground = "teaser_auto_background"
 }
 
 // MARK: - Donators
-struct Donators: Decodable {
+struct Donators: Decodable, Sendable {
     let extra: DonatorsExtra
 }
 
 // MARK: - DonatorsExtra
-struct DonatorsExtra: Decodable {
+struct DonatorsExtra: Decodable, Sendable {
     let isLast: Bool
 }
 
 // MARK: - SubscriptionLevel
-struct SubscriptionLevel: Decodable {
+struct SubscriptionLevel: Decodable, Sendable {
     let data: [TeaserElement]
     let isArchived: Bool
     let ownerID: Int
@@ -172,13 +172,13 @@ struct SubscriptionLevel: Decodable {
 }
 
 // MARK: - Tag
-struct Tag: Decodable {
+struct Tag: Decodable, Sendable {
     let title: String
     let id: Int
 }
 
 // MARK: - User
-struct User: Decodable {
+struct User: Decodable, Sendable {
     let hasAvatar: Bool
     let name: String
     let id: Int
@@ -195,12 +195,12 @@ struct User: Decodable {
 }
 
 // MARK: - Flags
-struct Flags: Decodable {
+struct Flags: Decodable, Sendable {
     let showPostDonations: Bool
 }
 
 // MARK: - BoostyPostFeedExtra
-struct BoostyPostFeedExtra: Decodable {
+struct BoostyPostFeedExtra: Decodable, Sendable {
     let offset: String
     let isLast: Bool
 }

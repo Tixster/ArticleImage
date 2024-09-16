@@ -4,7 +4,7 @@ import Foundation
 
 extension VKParserApp {
     struct Boosty: AsyncParsableCommand {
-        static var configuration: CommandConfiguration = .init(
+        static let configuration: CommandConfiguration = .init(
             subcommands: [
                 Other.self,
                 Tags.self

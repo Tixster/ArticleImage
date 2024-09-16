@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol IParser: AnyObject {
-    static func build() -> IParser
+    static func build() -> (any IParser & Sendable)
     init()
     ///  Парсинг с архивацией
     /// - Parameter info: Информация о статье
@@ -9,8 +9,7 @@ public protocol IParser: AnyObject {
     @discardableResult
     func parse(
         info: ArticleInfo,
-        withZip: Bool,
-        parametres: [ParserParametersKey: Any]?
+        withZip: Bool
     ) async throws -> URL
     // Парсинг со сохранением в папку
     /// - Parameters:
@@ -22,15 +21,13 @@ public protocol IParser: AnyObject {
     func parse(
         info: ArticleInfo,
         folderName: String?,
-        rootPath: String?,
-        parametres: [ParserParametersKey: Any]?
+        rootPath: String?
     ) async throws -> URL
     @discardableResult
     func parse(
         urls: [URL?],
         info: ArticleInfo,
-        withZip: Bool,
-        parametres: [ParserParametersKey: Any]?
+        withZip: Bool
     ) async throws -> URL
     /// Парсинг группы статей с одинаковой тематиков
     /// - Parameters:

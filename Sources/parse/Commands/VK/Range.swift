@@ -6,7 +6,7 @@ extension VKParserApp.VK {
 
     struct Range: AsyncParsableCommand {
 
-        static let vkPraser: any IParser = VKParser.build()
+        static let vkPraser: (IParser & Sendable) = VKParser.build()
 
         @Option(name: [.customLong("nsid")])
         var remixnsid: String?
@@ -21,7 +21,7 @@ extension VKParserApp.VK {
             help: "Ссылка на статью. На месте номера статьи должен быть знак `\(VKParser.parseSymbol)`.",
             transform: { URL(string: $0) }
         )
-        var url: URL?
+        private var url: URL?
 
         func run() async throws {
             let info: ArticleInfo = .init(url: url, remixnsid: remixnsid, remixsid: remixsid)
