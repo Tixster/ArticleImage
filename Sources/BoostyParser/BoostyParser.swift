@@ -129,7 +129,7 @@ private extension BoostyParser {
                 group.addTask { [weak self] in
                     try await self?.downloadPages(
                         urls: images,
-                        fileName: post.title,
+                        fileName: post.title.replacingOccurrences(of: " ", with: "_"),
                         rootPath: titleFolderURL.lastPathComponent + "/"
                     )
                 }

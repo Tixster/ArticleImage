@@ -241,7 +241,7 @@ extension Parser {
                     let urlFilePath = try await self.session.download(from: url).0
                     let file: ArchiveFile = .init(
                         filename: "\(index).\(url.imageExt)",
-                        data: try NSData(contentsOf: urlFilePath),
+                        data: try Data(contentsOf: urlFilePath),
                         modifiedTime: .now
                     )
                     return file

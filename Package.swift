@@ -19,8 +19,8 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/marmelroy/Zip.git",
-            .upToNextMinor(from: "2.1.2")
+            url: "https://github.com/vapor-community/Zip",
+            .upToNextMinor(from: "2.2.3")
         ),
         .package(
             url: "https://github.com/apple/swift-argument-parser",
